@@ -11,7 +11,7 @@ import java.util.List;
 @RequestMapping("/recipes")   // URL base: localhost:8080/recipes
 public class RecipesController {
 
-        private final RecipesService recipesService;
+    private final RecipesService recipesService;
 
     public RecipesController(RecipesService recipesService) {
         this.recipesService = recipesService;
@@ -19,7 +19,6 @@ public class RecipesController {
     // Criar receita
     @PostMapping
     public Recipes create(@RequestBody Recipes recipes){
-
         return recipesService.create(recipes);
     }
     // Listar todas as receitas
@@ -35,23 +34,11 @@ public class RecipesController {
     // Atualizar a receita por ID
     @PutMapping("/{id}")
     public Recipes update(@PathVariable Long id, @RequestBody Recipes newData) {
-
-        Recipes existing = recipesService.searchById(id);
-
-        if (existing == null) {
-            throw new RuntimeException("Recipe not found");
+        if (newData == null || newData.getId() == null) {
+            throw new IllegalArgumentException("ID da receita é obrigatório");
         }
-
-        existing.setName(newData.getName());
-        existing.setDescription(newData.getDescription());
-        existing.setPrice(newData.getPrice());
-        existing.setQuantityWeight(newData.getQuantityWeight());
-        existing.setAvailable(newData.getAvailable());
-
-        return recipesService.save(existing);
+        return recipesService.update(id, newData);
     }
-
-
     // Deletar a receita
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id){

@@ -34,8 +34,16 @@ public class RecipesService {
     }
 
     // Atualizar a receita por ID
-    public Recipes save(Recipes r){
-        return repository.save(r);
+    public Recipes update(Long id, Recipes newData){
+        Recipes recipe = searchById(id);
+        
+        recipe.setName(newData.getName());
+        recipe.setDescription(newData.getDescription());
+        recipe.setPrice(newData.getPrice());
+        recipe.setQuantityWeight(newData.getQuantityWeight());
+        recipe.setAvailable(newData.getAvailable());
+        
+        return repository.save(recipe);
     }
 
     // Deletar receita
