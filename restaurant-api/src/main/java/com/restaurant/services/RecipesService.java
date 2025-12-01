@@ -1,11 +1,12 @@
 package com.restaurant.services;
 
+import com.restaurant.exceptions.InvalidDatabaseActionException;
 import com.restaurant.models.Recipes;
 import com.restaurant.repositories.RecipesRepository;
 import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -35,15 +36,22 @@ public class RecipesService {
 
     // Atualizar a receita por ID
     public Recipes update(Long id, Recipes newData){
-        Recipes recipe = searchById(id);
+        try{
+            Recipes recipe = searchById(id);
         
-        recipe.setName(newData.getName());
-        recipe.setDescription(newData.getDescription());
-        recipe.setPrice(newData.getPrice());
-        recipe.setQuantityWeight(newData.getQuantityWeight());
-        recipe.setAvailable(newData.getAvailable());
+            recipe.setName(newData.getName());
+            recipe.setDescription(newData.getDescription());
+            recipe.setPrice(newData.getPrice());
+            recipe.setQuantityWeight(newData.getQuantityWeight());
+            recipe.setAvailable(newData.getAvailable());
+            
+            return repository.save(recipe);
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Receita não encontrada: " + id);
+        } catch (OptimisticLockingFailureException e){
+            throw new InvalidDatabaseActionException("Receita não encontrada: " + id);
+        }
         
-        return repository.save(recipe);
     }
 
     // Deletar receita

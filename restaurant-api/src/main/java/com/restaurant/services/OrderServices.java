@@ -23,5 +23,13 @@ public class OrderServices {
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
     }
 
+    public List<Order> findAllByName(String name){
+        List<Order> orders = repository.findByName(name);
+        if(orders.isEmpty()){
+            throw new RuntimeException("Nenhum pedido encontrado para o nome: " + name);
+        }
+        return orders;
+    }
+
 
 }
