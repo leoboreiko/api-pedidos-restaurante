@@ -1,10 +1,9 @@
 package com.restaurant.services;
 
+import com.restaurant.exceptions.EntityNotFoundException;
 import com.restaurant.exceptions.InvalidDatabaseActionException;
 import com.restaurant.models.Recipes;
 import com.restaurant.repositories.RecipesRepository;
-import jakarta.persistence.EntityNotFoundException;
-
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +30,7 @@ public class RecipesService {
 
     // Buscar receita por ID
     public Recipes searchById(Long id){
-        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Receita não encontrada: " + id));
+        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Receita não encontrada com ID: " + id));
     }
 
     // Atualizar a receita por ID
