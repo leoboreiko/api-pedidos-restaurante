@@ -6,11 +6,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 @ControllerAdvice
 public class ExceptionHandlerController {
-    @ExceptionHandler(value = {EntityNotFoundException.class})
-    public ResponseEntity<String> entityNotFoundExceptionHandler(EntityNotFoundException err){
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        return ResponseEntity.status(status).body(err.getMessage());
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    record ErrorResponse(int status, String message) {}
 }
+
+
+

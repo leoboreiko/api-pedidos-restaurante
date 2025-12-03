@@ -1,5 +1,6 @@
 package com.restaurant.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Data
+@Table(name = "orders")
 public class Order {
 
     @Id
@@ -16,11 +18,13 @@ public class Order {
 
     private String name;
 
+    @Column(name = "final_value")
     private Double finalValue;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 }

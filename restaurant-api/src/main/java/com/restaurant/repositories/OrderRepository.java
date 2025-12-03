@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    List<Order> findByName(String name);
+    List<Order> findByNameContainingIgnoreCase(String name);
 
 }

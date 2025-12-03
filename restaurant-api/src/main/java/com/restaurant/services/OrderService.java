@@ -25,9 +25,22 @@ public class OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com o ID: " + id));
     }
 
+    public List<Order> findAllByName(String name) {
+        List<Order> orders = repository.findByNameContainingIgnoreCase(name);
+        if (orders.isEmpty()) {
+            throw new EntityNotFoundException("Nenhum pedido encontrado com o nome: " + name);
+        }
+        return orders;
+    }
+
+
     public Order save(Order order) {
+        if (order.getItems() != null) {
+            order.getItems().forEach(item -> item.setOrder(order));
+        }
         return repository.save(order);
     }
+
 
 
     public Order update(Long id, Order data) {

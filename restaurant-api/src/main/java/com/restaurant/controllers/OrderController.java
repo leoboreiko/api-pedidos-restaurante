@@ -27,6 +27,10 @@ public class OrderController {
         return service.findById(id);
     }
 
+    @PostMapping("/filter-by-name")
+    public List<Order> findAllByName(@RequestParam String name) {
+        return service.findAllByName(name);
+    }
 
     @PostMapping
     public Order save(@RequestBody Order order) {
