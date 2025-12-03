@@ -1,8 +1,14 @@
 package com.restaurant.controllers;
 
+import com.restaurant.dtos.OrderDTO;
 import com.restaurant.models.Order;
 import com.restaurant.services.OrderService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,16 +17,13 @@ import java.util.List;
 @RequestMapping("/orders")
 public class OrderController {
 
-
     @Autowired
     private OrderService service;
-
 
     @GetMapping
     public List<Order> findAll() {
         return service.findAll();
     }
-
 
     @GetMapping("/{id}")
     public Order findById(@PathVariable Long id) {
@@ -32,14 +35,20 @@ public class OrderController {
         return service.findAllByName(name);
     }
 
-    @PostMapping
-    public Order save(@RequestBody Order order) {
-        return service.save(order);
-    }
-
-
     @PutMapping("/{id}")
     public Order update(@PathVariable Long id, @RequestBody Order order) {
         return service.update(id, order);
     }
+
+    @PostMapping
+    public ResponseEntity<Order> create(@Valid @RequestBody OrderDTO dto) {
+        Order order = new Order();
+        order.setName(dto.getName());
+        order.setFinalValue(dto.getFinalValue());
+        Order saved = service.save(order);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+
+
 }
