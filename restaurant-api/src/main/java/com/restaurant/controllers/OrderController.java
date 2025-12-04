@@ -1,54 +1,75 @@
 package com.restaurant.controllers;
 
-import com.restaurant.dtos.OrderDTO;
-import com.restaurant.models.Order;
+import com.restaurant.dtos.OrderRequestDTO;
+import com.restaurant.dtos.OrderResponseDTO;
+import com.restaurant.models.OrderStatus;
 import com.restaurant.services.OrderService;
 
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
 
-    @Autowired
-    private OrderService service;
+    private final OrderService service;
 
+    // Injeção por Construtor
+    public OrderController(OrderService service) {
+        this.service = service;
+    }
+
+    // Listar todos: GET /orders
     @GetMapping
-    public List<Order> findAll() {
-        return service.findAll();
+    public ResponseEntity<List<OrderResponseDTO>> findAll() {
+        return ResponseEntity.ok(service.findAll());
     }
 
+    // Buscar por ID: GET /orders/{id}
     @GetMapping("/{id}")
-    public Order findById(@PathVariable Long id) {
-        return service.findById(id);
+    public ResponseEntity<OrderResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
-    @PostMapping("/filter-by-name")
-    public List<Order> findAllByName(@RequestParam String name) {
-        return service.findAllByName(name);
+    // Busca por nome (usando Query Param e GET): GET /orders/search?name=joao
+    @GetMapping("/search") 
+    public ResponseEntity<List<OrderResponseDTO>> findByCustomerName(@RequestParam String name) {
+        return ResponseEntity.ok(service.findAllByName(name));
     }
 
-    @PutMapping("/{id}")
-    public Order update(@PathVariable Long id, @RequestBody Order order) {
-        return service.update(id, order);
-    }
-
+    // Criar pedido: POST /orders
     @PostMapping
-    public ResponseEntity<Order> create(@Valid @RequestBody OrderDTO dto) {
-        Order order = new Order();
-        order.setName(dto.getName());
-        order.setFinalValue(dto.getFinalValue());
-        Order saved = service.save(order);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<OrderResponseDTO> create(@Valid @RequestBody OrderRequestDTO requestDTO) {
+        OrderResponseDTO saved = service.create(requestDTO);
+        
+        // Retorna 201 CREATED e o URI do recurso
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+        
+        return ResponseEntity.created(location).body(saved);
+    }
+    
+    // Atualizar detalhes do pedido (PUT /orders/{id})
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderResponseDTO> update(@PathVariable Long id, @Valid @RequestBody OrderRequestDTO requestDTO) {
+        // Observação: Este PUT só deve atualizar campos simples como o nome do cliente.
+        return ResponseEntity.ok(service.update(id, requestDTO));
     }
 
-
-
+    // Atualizar STATUS (Melhor Prática: endpoint específico para atualização de status)
+    // PATCH /orders/{id}/status?newStatus=FINISHED
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<OrderResponseDTO> updateStatus(@PathVariable Long id, @RequestParam OrderStatus newStatus) {
+        OrderResponseDTO updatedOrder = service.updateStatus(id, newStatus);
+        return ResponseEntity.ok(updatedOrder);
+    }
 }

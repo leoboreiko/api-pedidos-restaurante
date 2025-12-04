@@ -2,13 +2,15 @@ package com.restaurant.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
-
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Getter @Setter @NoArgsConstructor
 @Table(name = "orders")
 public class Order {
 
@@ -16,16 +18,15 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
+    private String customerName; 
     @Column(name = "final_value")
-    private Double finalValue;
+    private BigDecimal finalValue = BigDecimal.ZERO; 
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY) 
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 }

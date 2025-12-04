@@ -1,25 +1,34 @@
 package com.restaurant.models;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
-
+import java.math.BigDecimal; 
 
 @Entity
-@Data
+@Getter @Setter @NoArgsConstructor
 @Table(name = "order_item")
 public class OrderItem {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String notes;
+    
+    private String notes; 
+    
     @Column(name = "unit_price")
-    private Double unitPrice;
+    private BigDecimal unitPrice; 
+    
     private Integer quantity;
-    @ManyToOne
+    
+    
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "recipe_id") 
+    private Recipes recipe;
+
+    
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "order_id")
-    @JsonBackReference
+    @JsonBackReference 
     private Order order;
 }
