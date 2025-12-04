@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Mapeia exceções Java para Status Codes HTTP padronizados.
  */
 @ControllerAdvice
-public class RestExceptionHandler { 
+public class GlobalExceptionHandler { 
 
     // Record para a resposta de erro padronizada
     public record ErrorResponse(int status, String error, String message, String timestamp) {}
@@ -60,7 +60,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
         // HttpStatus.UNPROCESSABLE_ENTITY (422) é um código de erro HTTP padrão para falhas de validação de negócios.
-        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", ex.getMessage());
+        return buildResponse(HttpStatus.valueOf(422), "Unprocessable Entity", ex.getMessage());
     }
 
     // --- Handler para 409 Conflict ---
