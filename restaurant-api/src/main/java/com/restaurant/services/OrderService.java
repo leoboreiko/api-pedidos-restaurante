@@ -2,12 +2,12 @@ package com.restaurant.services;
 
 import com.restaurant.dtos.*;
 import com.restaurant.exceptions.BadRequestException;
+import com.restaurant.exceptions.ConflictException;
 import com.restaurant.exceptions.EntityNotFoundException;
 import com.restaurant.models.Order;
 import com.restaurant.models.OrderItem;
 import com.restaurant.models.OrderStatus;
 import com.restaurant.models.Recipes;
-import com.restaurant.repositories.OrderItemRepository;
 import com.restaurant.repositories.OrderRepository;
 import com.restaurant.repositories.RecipesRepository;
 import org.springframework.stereotype.Service;
@@ -15,30 +15,25 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.restaurant.exceptions.ConflictException;
 
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final RecipesRepository recipesRepository;
-    private final OrderItemRepository orderItemRepository;
 
-    // Injeção por Construtor (Todos os Repositórios necessários)
-    public OrderService(OrderRepository orderRepository, RecipesRepository recipesRepository, OrderItemRepository orderItemRepository) {
+    // Injeção por Construtor (Apenas Repositórios necessários)
+    public OrderService(OrderRepository orderRepository, RecipesRepository recipesRepository) {
         this.orderRepository = orderRepository;
         this.recipesRepository = recipesRepository;
-        this.orderItemRepository = orderItemRepository;
     }
     
-    // --- Mapeamento DTO <-> Entity (Complexo devido à lógica de cálculo) ---
-
-    // Mapeia Entity -> DTO de Resposta
+    // --- Mapeamento Entity -> DTO de Resposta ---
     private OrderResponseDTO toResponseDTO(Order order) {
         List<OrderItemResponseDTO> itemDTOs = order.getItems().stream()
             .map(item -> new OrderItemResponseDTO(
                 item.getId(), 
-                item.getRecipe() != null ? item.getRecipe().getName() : "Item Removido", // Lógica para nome
+                item.getRecipe() != null ? item.getRecipe().getName() : "Item Removido", 
                 item.getQuantity(), 
                 item.getUnitPrice(), 
                 item.getNotes()
@@ -93,6 +88,7 @@ public class OrderService {
         // 6. Define o valor final calculado
         newOrder.setFinalValue(totalValue);
         
+        // 7. Salva a Order. Os OrderItems são salvos automaticamente via Cascade.
         Order savedOrder = orderRepository.save(newOrder);
         return toResponseDTO(savedOrder);
     }
@@ -113,7 +109,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> findAllByName(String name) {
-        // Retorna 200 OK com lista vazia se não encontrar (padrão RESTful para buscas)
+        // Usa o Query Method definido no Repositório
         return orderRepository.findByCustomerNameContainingIgnoreCase(name).stream().map(this::toResponseDTO).collect(Collectors.toList());
     }
 
@@ -127,13 +123,11 @@ public class OrderService {
              throw new ConflictException("Não é possível alterar um pedido com status: " + orderToUpdate.getStatus());
         }
 
-        // Aplica atualizações simples do DTO (o cliente pode alterar o nome)
+        // Aplica atualizações simples do DTO
         orderToUpdate.setCustomerName(requestDTO.getCustomerName());
         
-        // **AVISO:** A atualização de itens de pedido (order.setItems()) é complexa
-        // e requer lógica para diferenciar itens a adicionar, remover ou atualizar. 
-        // Para simplificar, esta implementação assume que a atualização de itens 
-        // deve ser feita através de endpoints PATCH/PUT separados.
+        // **Aviso:** A atualização de itens de pedido não está implementada aqui por ser complexa 
+        // (requer lógica de delta: o que adicionar/remover/atualizar na lista existente).
         
         return toResponseDTO(orderRepository.save(orderToUpdate));
     }
@@ -143,12 +137,12 @@ public class OrderService {
         Order order = orderRepository.findById(id)
              .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado para atualização de status com ID: " + id));
         
-        // Regra de Negócio: Exemplo de transição de status
         if (order.getStatus() == OrderStatus.FINISHED && newStatus != OrderStatus.CANCELLED) {
-             throw new ConflictException("Pedido finalizado só pode ser cancelado.");
+             throw new ConflictException("Pedido finalizado só pode ter seu status alterado para CANCELLED.");
         }
         
         order.setStatus(newStatus);
         return toResponseDTO(orderRepository.save(order));
     }
 }
+            
